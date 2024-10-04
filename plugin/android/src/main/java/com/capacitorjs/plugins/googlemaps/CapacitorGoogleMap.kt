@@ -3,6 +3,7 @@ package com.capacitorjs.plugins.googlemaps
 import android.annotation.SuppressLint
 import android.graphics.*
 import android.location.Location
+import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -18,6 +19,7 @@ import com.google.maps.android.clustering.Cluster
 import com.google.maps.android.clustering.ClusterManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.URL
 
@@ -784,7 +786,18 @@ class CapacitorGoogleMap(
             } else {
                 try {
                     var stream: InputStream? = null
-                    if (marker.iconUrl!!.startsWith("https:")) {
+                    if (marker.iconUrl!!.startsWith("data:")) {
+                        // Extract the base64 part for the data URL
+                        val base64Data = marker.iconUrl!!.split(",")[1]
+
+                        // Decode the base64 string into a byte array
+                        val decodedBytes = Base64.decode(base64Data, Base64.DEFAULT)
+
+                        // Convert the byte array to an InputStream
+                        stream = ByteArrayInputStream(decodedBytes)
+
+                    }
+                    elseif (marker.iconUrl!!.startsWith("https:")) {
                         stream = URL(marker.iconUrl).openConnection().getInputStream()
                     } else {
                         stream = this.delegate.context.assets.open("public/${marker.iconUrl}")
