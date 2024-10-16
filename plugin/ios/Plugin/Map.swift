@@ -182,8 +182,9 @@ public class Map {
                     let width = Double((item as? UIScrollView)?.contentSize.width ?? 0)
                     let actualHeight = round(height / 2)
 
-                    let isWidthEqual = width == self.config.width
-                    let isHeightEqual = actualHeight == self.config.height
+                    let tolerance = 1.0
+                    let isWidthEqual = abs(width - self.config.width) <= tolerance
+                    let isHeightEqual = abs(actualHeight - self.config.height) <= tolerance
 
                     if isWidthEqual && isHeightEqual && item.tag < self.targetViewController?.tag ?? Map.MAP_TAG {
                         return item
