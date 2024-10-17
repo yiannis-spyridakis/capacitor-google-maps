@@ -182,8 +182,9 @@ public class Map {
                     let width = Double((item as? UIScrollView)?.contentSize.width ?? 0)
                     let actualHeight = round(height / 2)
 
-                    let isWidthEqual = width == self.config.width
-                    let isHeightEqual = actualHeight == self.config.height
+                    let tolerance = 1.0
+                    let isWidthEqual = abs(width - self.config.width) <= tolerance
+                    let isHeightEqual = abs(actualHeight - self.config.height) <= tolerance
 
                     if isWidthEqual && isHeightEqual && item.tag < self.targetViewController?.tag ?? Map.MAP_TAG {
                         return item
@@ -621,7 +622,21 @@ public class Map {
             if let iconImage = self.markerIcons[iconUrl] {
                 newMarker.icon = getResizedIcon(iconImage, marker)
             } else {
-                if iconUrl.starts(with: "https:") {
+                if iconUrl.starts(with: "data") {
+                  // Handle base64 encoded image
+                  if let dataRange = iconUrl.range(of: "base64,") {
+                    let base64String = String(iconUrl[dataRange.upperBound...])
+                    if let imageData = Data(base64Encoded: base64String, options: .ignoreUnknownCharacters),
+                      let iconImage = UIImage(data: imageData) {
+                        self.markerIcons[iconUrl] = iconImage
+                        newMarker.icon = getResizedIcon(iconImage, marker)
+                    } else {
+                      print("CapacitorGoogleMaps Wanring: could not decode base64 image. Using default marker icon.")
+                    }
+                  } else {
+                    print("CapacitorGoogleMaps Warning: invalid data URL format. Using default marker icon.")
+                  }
+                } else if iconUrl.starts(with: "https:") {
                     if let url = URL(string: iconUrl) {
                         URLSession.shared.dataTask(with: url) { (data, _, _) in
                             DispatchQueue.main.async {
